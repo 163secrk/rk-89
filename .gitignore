@@ -31,9 +31,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Env
-.env
-.env.local
+# OS
 
 # Logs
 *.log
