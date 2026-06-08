@@ -19,6 +19,11 @@ func main() {
 		&models.Order{},
 		&models.OrderItem{},
 		&models.MealPlan{},
+		&models.Ingredient{},
+		&models.DishIngredient{},
+		&models.Booking{},
+		&models.PurchaseList{},
+		&models.PurchaseItem{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)

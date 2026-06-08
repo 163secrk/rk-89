@@ -66,6 +66,71 @@ type MealPlan struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Ingredient struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"size:100;not null" json:"name"`
+	Category  string    `gorm:"size:50;not null" json:"category"`
+	Unit      string    `gorm:"size:20;not null" json:"unit"`
+	Price     float64   `gorm:"default:0" json:"price"`
+	Stock     float64   `gorm:"default:0" json:"stock"`
+	Supplier  string    `gorm:"size:100" json:"supplier"`
+	Remark    string    `gorm:"size:500" json:"remark"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type DishIngredient struct {
+	ID           uint       `gorm:"primaryKey" json:"id"`
+	DishID       uint       `json:"dish_id"`
+	Dish         Dish       `json:"dish,omitempty"`
+	IngredientID uint       `json:"ingredient_id"`
+	Ingredient   Ingredient `json:"ingredient,omitempty"`
+	Quantity     float64    `gorm:"not null" json:"quantity"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+type Booking struct {
+	ID         uint        `gorm:"primaryKey" json:"id"`
+	BookingNo  string      `gorm:"size:50;unique;not null" json:"booking_no"`
+	Date       string      `gorm:"size:20;not null" json:"date"`
+	MealType   string      `gorm:"size:20;not null" json:"meal_type"`
+	PeopleNum  int         `gorm:"not null;default:0" json:"people_num"`
+	DishIDs    string      `gorm:"size:255" json:"dish_ids"`
+	Dishes     []Dish      `gorm:"-" json:"dishes,omitempty"`
+	Status     string      `gorm:"size:20;default:'pending'" json:"status"`
+	Remark     string      `gorm:"size:500" json:"remark"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
+}
+
+type PurchaseList struct {
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	PurchaseNo string         `gorm:"size:50;unique;not null" json:"purchase_no"`
+	BookingID  uint           `json:"booking_id"`
+	Booking    Booking        `json:"booking,omitempty"`
+	Date       string         `gorm:"size:20;not null" json:"date"`
+	Status     string         `gorm:"size:20;default:'draft'" json:"status"`
+	TotalPrice float64        `gorm:"default:0" json:"total_price"`
+	Remark     string         `gorm:"size:500" json:"remark"`
+	Items      []PurchaseItem `json:"items,omitempty"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+}
+
+type PurchaseItem struct {
+	ID            uint       `gorm:"primaryKey" json:"id"`
+	PurchaseListID uint      `json:"purchase_list_id"`
+	IngredientID  uint       `json:"ingredient_id"`
+	Ingredient    Ingredient `json:"ingredient,omitempty"`
+	RequiredQty   float64    `gorm:"not null" json:"required_qty"`
+	StockQty      float64    `gorm:"default:0" json:"stock_qty"`
+	PurchaseQty   float64    `gorm:"default:0" json:"purchase_qty"`
+	UnitPrice     float64    `gorm:"default:0" json:"unit_price"`
+	Subtotal      float64    `gorm:"default:0" json:"subtotal"`
+	Remark        string     `gorm:"size:500" json:"remark"`
+}
+
 func SeedData(db *gorm.DB) {
 	var userCount int64
 	db.Model(&User{}).Count(&userCount)
@@ -94,5 +159,63 @@ func SeedData(db *gorm.DB) {
 			{Name: "苹果", Category: "水果", Price: 4.00, Image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=300&h=200&fit=crop", Description: "新鲜红富士苹果", Nutrition: "维生素C, 膳食纤维", Calories: 95, Available: true, Stock: 100},
 		}
 		db.Create(&dishes)
+	}
+
+	var ingredientCount int64
+	db.Model(&Ingredient{}).Count(&ingredientCount)
+	if ingredientCount == 0 {
+		ingredients := []Ingredient{
+			{Name: "五花肉", Category: "肉类", Unit: "kg", Price: 35.00, Stock: 50.0, Supplier: "鲜肉批发"},
+			{Name: "鲈鱼", Category: "水产", Unit: "kg", Price: 45.00, Stock: 20.0, Supplier: "水产商行"},
+			{Name: "鸡胸肉", Category: "肉类", Unit: "kg", Price: 22.00, Stock: 40.0, Supplier: "鲜肉批发"},
+			{Name: "花生米", Category: "干货", Unit: "kg", Price: 18.00, Stock: 30.0, Supplier: "干货批发"},
+			{Name: "干辣椒", Category: "调料", Unit: "kg", Price: 30.00, Stock: 10.0, Supplier: "调料商行"},
+			{Name: "西兰花", Category: "蔬菜", Unit: "kg", Price: 12.00, Stock: 25.0, Supplier: "蔬菜配送"},
+			{Name: "大蒜", Category: "调料", Unit: "kg", Price: 8.00, Stock: 15.0, Supplier: "蔬菜配送"},
+			{Name: "西红柿", Category: "蔬菜", Unit: "kg", Price: 6.00, Stock: 30.0, Supplier: "蔬菜配送"},
+			{Name: "鸡蛋", Category: "禽蛋", Unit: "kg", Price: 10.00, Stock: 40.0, Supplier: "禽蛋批发"},
+			{Name: "豆腐", Category: "豆制品", Unit: "kg", Price: 5.00, Stock: 50.0, Supplier: "豆制品厂"},
+			{Name: "豆瓣酱", Category: "调料", Unit: "kg", Price: 15.00, Stock: 20.0, Supplier: "调料商行"},
+			{Name: "大米", Category: "主食", Unit: "kg", Price: 5.00, Stock: 200.0, Supplier: "粮油批发"},
+			{Name: "杂粮米", Category: "主食", Unit: "kg", Price: 8.00, Stock: 100.0, Supplier: "粮油批发"},
+			{Name: "紫菜", Category: "干货", Unit: "kg", Price: 40.00, Stock: 5.0, Supplier: "干货批发"},
+			{Name: "苹果", Category: "水果", Unit: "kg", Price: 10.00, Stock: 50.0, Supplier: "水果批发"},
+			{Name: "生抽", Category: "调料", Unit: "瓶", Price: 12.00, Stock: 30.0, Supplier: "调料商行"},
+			{Name: "食用油", Category: "调料", Unit: "L", Price: 15.00, Stock: 50.0, Supplier: "粮油批发"},
+			{Name: "盐", Category: "调料", Unit: "kg", Price: 3.00, Stock: 20.0, Supplier: "调料商行"},
+		}
+		db.Create(&ingredients)
+	}
+
+	var dishIngredientCount int64
+	db.Model(&DishIngredient{}).Count(&dishIngredientCount)
+	if dishIngredientCount == 0 {
+		dishIngredients := []DishIngredient{
+			{DishID: 1, IngredientID: 1, Quantity: 0.15},
+			{DishID: 1, IngredientID: 16, Quantity: 0.01},
+			{DishID: 1, IngredientID: 17, Quantity: 0.02},
+			{DishID: 2, IngredientID: 2, Quantity: 0.25},
+			{DishID: 2, IngredientID: 7, Quantity: 0.01},
+			{DishID: 2, IngredientID: 18, Quantity: 0.002},
+			{DishID: 3, IngredientID: 3, Quantity: 0.12},
+			{DishID: 3, IngredientID: 4, Quantity: 0.02},
+			{DishID: 3, IngredientID: 5, Quantity: 0.005},
+			{DishID: 3, IngredientID: 11, Quantity: 0.01},
+			{DishID: 4, IngredientID: 6, Quantity: 0.2},
+			{DishID: 4, IngredientID: 7, Quantity: 0.02},
+			{DishID: 4, IngredientID: 17, Quantity: 0.01},
+			{DishID: 5, IngredientID: 8, Quantity: 0.15},
+			{DishID: 5, IngredientID: 9, Quantity: 0.1},
+			{DishID: 5, IngredientID: 17, Quantity: 0.01},
+			{DishID: 6, IngredientID: 10, Quantity: 0.2},
+			{DishID: 6, IngredientID: 11, Quantity: 0.015},
+			{DishID: 6, IngredientID: 5, Quantity: 0.003},
+			{DishID: 7, IngredientID: 12, Quantity: 0.1},
+			{DishID: 8, IngredientID: 13, Quantity: 0.1},
+			{DishID: 9, IngredientID: 14, Quantity: 0.005},
+			{DishID: 9, IngredientID: 9, Quantity: 0.03},
+			{DishID: 10, IngredientID: 15, Quantity: 0.2},
+		}
+		db.Create(&dishIngredients)
 	}
 }

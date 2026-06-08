@@ -56,5 +56,49 @@ func SetupRoutes(r *gin.Engine) {
 		}
 
 		api.GET("/stats/dashboard", controllers.GetDashboardStats)
+
+		ingredients := api.Group("/ingredients")
+		{
+			ingredients.GET("", controllers.GetIngredients)
+			ingredients.GET("/categories", controllers.GetIngredientCategories)
+			ingredients.GET("/:id", controllers.GetIngredient)
+			ingredients.POST("", controllers.CreateIngredient)
+			ingredients.PUT("/:id", controllers.UpdateIngredient)
+			ingredients.DELETE("/:id", controllers.DeleteIngredient)
+		}
+
+		dishIngredients := api.Group("/dish-ingredients")
+		{
+			dishIngredients.GET("", controllers.GetDishIngredients)
+			dishIngredients.GET("/:id", controllers.GetDishIngredient)
+			dishIngredients.GET("/dish/:dishId", controllers.GetIngredientsByDish)
+			dishIngredients.POST("", controllers.CreateDishIngredient)
+			dishIngredients.POST("/batch", controllers.BatchSetDishIngredients)
+			dishIngredients.PUT("/:id", controllers.UpdateDishIngredient)
+			dishIngredients.DELETE("/:id", controllers.DeleteDishIngredient)
+		}
+
+		bookings := api.Group("/bookings")
+		{
+			bookings.GET("", controllers.GetBookings)
+			bookings.GET("/:id", controllers.GetBooking)
+			bookings.POST("", controllers.CreateBooking)
+			bookings.PUT("/:id", controllers.UpdateBooking)
+			bookings.DELETE("/:id", controllers.DeleteBooking)
+			bookings.PUT("/:id/status", controllers.UpdateBookingStatus)
+			bookings.POST("/calculate", controllers.CalculateIngredients)
+		}
+
+		purchases := api.Group("/purchases")
+		{
+			purchases.GET("", controllers.GetPurchaseLists)
+			purchases.GET("/stats", controllers.GetPurchaseStats)
+			purchases.GET("/:id", controllers.GetPurchaseList)
+			purchases.POST("/generate", controllers.GeneratePurchaseList)
+			purchases.PUT("/:id", controllers.UpdatePurchaseList)
+			purchases.DELETE("/:id", controllers.DeletePurchaseList)
+			purchases.PUT("/:id/status", controllers.UpdatePurchaseStatus)
+			purchases.PUT("/items/:id", controllers.UpdatePurchaseItem)
+		}
 	}
 }
