@@ -16,6 +16,10 @@ tmp/
 # Dependencies (if using modules vendor)
 vendor/
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
 # IDE
 .idea/
 .vscode/

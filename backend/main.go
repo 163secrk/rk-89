@@ -1,0 +1,42 @@
+package main
+
+import (
+	"log"
+	"zhiwei-canteen/config"
+	"zhiwei-canteen/models"
+	"zhiwei-canteen/routes"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	config.InitDB()
+
+	err := config.DB.AutoMigrate(
+		&models.User{},
+		&models.Dish{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.MealPlan{},
+	)
+	if err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
+
+	models.SeedData(config.DB)
+
+	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3089"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+	}))
+
+	routes.SetupRoutes(r)
+
+	log.Println("Server starting on port 8089...")
+	log.Fatal(r.Run(":8089"))
+}
