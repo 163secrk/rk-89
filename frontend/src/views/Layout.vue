@@ -7,16 +7,37 @@
       </div>
       <el-menu
         :default-active="activeMenu"
+        :default-openeds="defaultOpeneds"
         router
         background-color="#304156"
         text-color="#bfcbd9"
         active-text-color="#409EFF"
         class="sidebar-menu"
       >
-        <template v-for="route in menuRoutes" :key="route.path">
-          <el-menu-item :index="'/' + route.path">
-            <el-icon><component :is="route.meta.icon" /></el-icon>
-            <span>{{ route.meta.title }}</span>
+        <template v-for="menu in filteredMenus" :key="menu.path">
+          <el-sub-menu
+            v-if="menu.children && menu.children.length > 1"
+            :index="menu.path"
+          >
+            <template #title>
+              <el-icon><component :is="menu.icon" /></el-icon>
+              <span>{{ menu.title }}</span>
+            </template>
+            <el-menu-item
+              v-for="child in menu.children"
+              :key="child.path"
+              :index="child.path"
+            >
+              <el-icon><component :is="child.icon" /></el-icon>
+              <span>{{ child.title }}</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item
+            v-else-if="menu.children && menu.children.length === 1"
+            :index="menu.children[0].path"
+          >
+            <el-icon><component :is="menu.icon" /></el-icon>
+            <span>{{ menu.title }}</span>
           </el-menu-item>
         </template>
       </el-menu>
@@ -70,23 +91,62 @@ import { ElMessageBox } from 'element-plus'
 import { Food, User, UserFilled, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
 import { getUser, removeToken, removeUser } from '@/utils/auth'
 import { logout } from '@/api/auth'
+import menuConfig from '@/config/menu'
 
 const route = useRoute()
 const router = useRouter()
 const user = ref(getUser())
 
-const menuRoutes = computed(() => {
-  const routes = router.options.routes.find(r => r.path === '/')?.children || []
-  return routes.filter(r => {
-    if (r.meta?.roles) {
-      return r.meta.roles.includes(user.value?.role)
+const hasPermission = (menu) => {
+  if (menu.roles) {
+    return menu.roles.includes(user.value?.role)
+  }
+  return true
+}
+
+const filterMenus = (menus) => {
+  return menus.filter(menu => {
+    if (!hasPermission(menu)) {
+      return false
+    }
+    if (menu.children) {
+      menu.children = menu.children.filter(child => hasPermission(child))
+      return menu.children.length > 0
     }
     return true
   })
+}
+
+const filteredMenus = computed(() => filterMenus(JSON.parse(JSON.stringify(menuConfig))))
+
+const findParentMenu = (path, menus) => {
+  for (const menu of menus) {
+    if (menu.children?.some(child => child.path === path)) {
+      return menu
+    }
+  }
+  return null
+}
+
+const defaultOpeneds = computed(() => {
+  const parent = findParentMenu(route.path, filteredMenus.value)
+  return parent ? [parent.path] : []
 })
 
 const activeMenu = computed(() => route.path)
-const currentTitle = computed(() => route.meta?.title || '')
+
+const currentTitle = computed(() => {
+  for (const menu of filteredMenus.value) {
+    if (menu.children) {
+      for (const child of menu.children) {
+        if (child.path === route.path) {
+          return child.title
+        }
+      }
+    }
+  }
+  return route.meta?.title || ''
+})
 
 const handleCommand = async (command) => {
   if (command === 'logout') {
