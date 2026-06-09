@@ -28,13 +28,118 @@
 
       <el-tabs v-model="activeZoneTab" type="card" @tab-change="handleTabChange">
         <el-tab-pane label="干货区" name="dry">
-          <InventoryTable :data="zoneData.dry" :zones="zones" @update="handleUpdate" @transfer="handleTransfer" />
+          <el-table :data="zoneData.dry" style="width: 100%" stripe>
+            <el-table-column prop="name" label="食材名称" min-width="120" />
+            <el-table-column prop="category" label="分类" width="100" />
+            <el-table-column label="当前库存" width="120">
+              <template #default="{ row }">
+                <span :class="row.alert_level !== 'normal' ? 'text-danger' : ''">{{ row.stock }} {{ row.unit }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="安全库存" width="100">
+              <template #default="{ row }">{{ row.safety_stock }} {{ row.unit }}</template>
+            </el-table-column>
+            <el-table-column label="库存状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getAlertType(row.alert_level)" size="small">
+                  {{ getAlertText(row.alert_level) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="库存价值" width="120">
+              <template #default="{ row }">¥{{ Number(row.stock_value).toFixed(2) }}</template>
+            </el-table-column>
+            <el-table-column label="供应商" width="120" prop="supplier" />
+            <el-table-column label="操作" width="180" fixed="right">
+              <template #default="{ row }">
+                <div style="display: flex; gap: 8px;">
+                  <el-button type="primary" size="small" link @click="handleUpdate(row)">
+                    <el-icon><Edit /></el-icon> 编辑
+                  </el-button>
+                  <el-button type="success" size="small" link @click="handleTransfer(row)">
+                    <el-icon><Switch /></el-icon> 调拨
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-if="zoneData.dry.length === 0" description="暂无库存数据" />
         </el-tab-pane>
         <el-tab-pane label="冷藏区" name="refrigerated">
-          <InventoryTable :data="zoneData.refrigerated" :zones="zones" @update="handleUpdate" @transfer="handleTransfer" />
+          <el-table :data="zoneData.refrigerated" style="width: 100%" stripe>
+            <el-table-column prop="name" label="食材名称" min-width="120" />
+            <el-table-column prop="category" label="分类" width="100" />
+            <el-table-column label="当前库存" width="120">
+              <template #default="{ row }">
+                <span :class="row.alert_level !== 'normal' ? 'text-danger' : ''">{{ row.stock }} {{ row.unit }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="安全库存" width="100">
+              <template #default="{ row }">{{ row.safety_stock }} {{ row.unit }}</template>
+            </el-table-column>
+            <el-table-column label="库存状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getAlertType(row.alert_level)" size="small">
+                  {{ getAlertText(row.alert_level) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="库存价值" width="120">
+              <template #default="{ row }">¥{{ Number(row.stock_value).toFixed(2) }}</template>
+            </el-table-column>
+            <el-table-column label="供应商" width="120" prop="supplier" />
+            <el-table-column label="操作" width="180" fixed="right">
+              <template #default="{ row }">
+                <div style="display: flex; gap: 8px;">
+                  <el-button type="primary" size="small" link @click="handleUpdate(row)">
+                    <el-icon><Edit /></el-icon> 编辑
+                  </el-button>
+                  <el-button type="success" size="small" link @click="handleTransfer(row)">
+                    <el-icon><Switch /></el-icon> 调拨
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-if="zoneData.refrigerated.length === 0" description="暂无库存数据" />
         </el-tab-pane>
         <el-tab-pane label="冷冻区" name="frozen">
-          <InventoryTable :data="zoneData.frozen" :zones="zones" @update="handleUpdate" @transfer="handleTransfer" />
+          <el-table :data="zoneData.frozen" style="width: 100%" stripe>
+            <el-table-column prop="name" label="食材名称" min-width="120" />
+            <el-table-column prop="category" label="分类" width="100" />
+            <el-table-column label="当前库存" width="120">
+              <template #default="{ row }">
+                <span :class="row.alert_level !== 'normal' ? 'text-danger' : ''">{{ row.stock }} {{ row.unit }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="安全库存" width="100">
+              <template #default="{ row }">{{ row.safety_stock }} {{ row.unit }}</template>
+            </el-table-column>
+            <el-table-column label="库存状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getAlertType(row.alert_level)" size="small">
+                  {{ getAlertText(row.alert_level) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="库存价值" width="120">
+              <template #default="{ row }">¥{{ Number(row.stock_value).toFixed(2) }}</template>
+            </el-table-column>
+            <el-table-column label="供应商" width="120" prop="supplier" />
+            <el-table-column label="操作" width="180" fixed="right">
+              <template #default="{ row }">
+                <div style="display: flex; gap: 8px;">
+                  <el-button type="primary" size="small" link @click="handleUpdate(row)">
+                    <el-icon><Edit /></el-icon> 编辑
+                  </el-button>
+                  <el-button type="success" size="small" link @click="handleTransfer(row)">
+                    <el-icon><Switch /></el-icon> 调拨
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-if="zoneData.frozen.length === 0" description="暂无库存数据" />
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -97,8 +202,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, h } from 'vue'
-import { Search, Edit, Switch, Warning } from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { Search, Edit, Switch } from '@element-plus/icons-vue'
 import { getInventoryByZone, getWarehouseZones, getIngredientCategories, updateIngredient, updateIngredientZone } from '@/api/inventory'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUser } from '@/utils/auth'
@@ -153,6 +258,16 @@ const zoneData = computed(() => {
 const getZoneName = (zone) => {
   const names = { dry: '干货区', refrigerated: '冷藏区', frozen: '冷冻区' }
   return names[zone] || zone
+}
+
+const getAlertType = (level) => {
+  const types = { normal: 'info', warning: 'warning', critical: 'danger' }
+  return types[level] || 'info'
+}
+
+const getAlertText = (level) => {
+  const texts = { normal: '正常', warning: '预警', critical: '严重' }
+  return texts[level] || level
 }
 
 const handleTabChange = (tab) => {
@@ -262,73 +377,6 @@ const handleTransferSave = async () => {
     }
   } catch (e) {
     ElMessage.error('调拨失败')
-  }
-}
-
-const InventoryTable = {
-  props: ['data', 'zones'],
-  emits: ['update', 'transfer'],
-  setup(props, { emit }) {
-    const getAlertType = (level) => {
-      const types = { normal: 'info', warning: 'warning', critical: 'danger' }
-      return types[level] || 'info'
-    }
-
-    const getAlertText = (level) => {
-      const texts = { normal: '正常', warning: '预警', critical: '严重' }
-      return texts[level] || level
-    }
-
-    const getZoneName = (zone) => {
-      const names = { dry: '干货区', refrigerated: '冷藏区', frozen: '冷冻区' }
-      return names[zone] || zone
-    }
-
-    return () => h('div', [
-      h('el-table', {
-        data: props.data,
-        style: { width: '100%' },
-        stripe: true
-      }, [
-        h('el-table-column', { prop: 'name', label: '食材名称', minWidth: 120 }),
-        h('el-table-column', { prop: 'category', label: '分类', width: 100 }),
-        h('el-table-column', { label: '当前库存', width: 120 }, {
-          default: ({ row }) => h('span', {
-            class: row.alert_level !== 'normal' ? 'text-danger' : ''
-          }, `${row.stock} ${row.unit}`)
-        }),
-        h('el-table-column', { label: '安全库存', width: 100 }, {
-          default: ({ row }) => `${row.safety_stock} ${row.unit}`
-        }),
-        h('el-table-column', { label: '库存状态', width: 100 }, {
-          default: ({ row }) => h('el-tag', {
-            type: getAlertType(row.alert_level),
-            size: 'small'
-          }, () => getAlertText(row.alert_level))
-        }),
-        h('el-table-column', { label: '库存价值', width: 120 }, {
-          default: ({ row }) => `¥${Number(row.stock_value).toFixed(2)}`
-        }),
-        h('el-table-column', { label: '供应商', width: 120, prop: 'supplier' }),
-        h('el-table-column', { label: '操作', width: 180, fixed: 'right' }, {
-          default: ({ row }) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-            h('el-button', {
-              type: 'primary',
-              size: 'small',
-              link: true,
-              onClick: () => emit('update', row)
-            }, () => [h('el-icon', () => h(Edit)), ' 编辑']),
-            h('el-button', {
-              type: 'success',
-              size: 'small',
-              link: true,
-              onClick: () => emit('transfer', row)
-            }, () => [h('el-icon', () => h(Switch)), ' 调拨'])
-          ])
-        })
-      ]),
-      props.data.length === 0 ? h('el-empty', { description: '暂无库存数据' }) : null
-    ])
   }
 }
 

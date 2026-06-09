@@ -79,9 +79,23 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	updateData.ID = user.ID
+	updateData.Username = user.Username
 	if updateData.Password == "" {
 		updateData.Password = user.Password
 	}
+	if updateData.Email == "" {
+		updateData.Email = user.Email
+	}
+	if updateData.Phone == "" {
+		updateData.Phone = user.Phone
+	}
+	if updateData.Status == "" {
+		updateData.Status = user.Status
+	}
+	if updateData.Department == "" {
+		updateData.Department = user.Department
+	}
+	updateData.CreatedAt = user.CreatedAt
 
 	if err := config.DB.Save(&updateData).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "更新失败"})

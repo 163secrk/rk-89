@@ -12,6 +12,9 @@ type User struct {
 	Password      string    `gorm:"size:100;not null" json:"password,omitempty"`
 	Name          string    `gorm:"size:50;not null" json:"name"`
 	Role          string    `gorm:"size:20;not null;default:'user'" json:"role"`
+	Email         string    `gorm:"size:100" json:"email"`
+	Phone         string    `gorm:"size:20" json:"phone"`
+	Status        string    `gorm:"size:20;not null;default:'active'" json:"status"`
 	Department    string    `gorm:"size:100" json:"department"`
 	MealAllowance float64   `gorm:"default:0" json:"meal_allowance"`
 	CreatedAt     time.Time `json:"created_at"`
@@ -214,9 +217,9 @@ func SeedData(db *gorm.DB) {
 	db.Model(&User{}).Count(&userCount)
 	if userCount == 0 {
 		users := []User{
-			{Username: "admin", Password: "123456", Name: "管理员", Role: "admin", Department: "信息部", MealAllowance: 500.00},
-			{Username: "user1", Password: "123456", Name: "张三", Role: "user", Department: "研发部", MealAllowance: 500.00},
-			{Username: "user2", Password: "123456", Name: "李四", Role: "user", Department: "市场部", MealAllowance: 500.00},
+			{Username: "admin", Password: "123456", Name: "管理员", Role: "admin", Email: "admin@example.com", Phone: "13800138000", Status: "active", Department: "信息部", MealAllowance: 500.00},
+			{Username: "user1", Password: "123456", Name: "张三", Role: "user", Email: "zhangsan@example.com", Phone: "13800138001", Status: "active", Department: "研发部", MealAllowance: 500.00},
+			{Username: "user2", Password: "123456", Name: "李四", Role: "user", Email: "lisi@example.com", Phone: "13800138002", Status: "inactive", Department: "市场部", MealAllowance: 500.00},
 		}
 		db.Create(&users)
 	}

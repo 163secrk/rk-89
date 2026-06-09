@@ -28,8 +28,18 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="phone" label="电话" width="140" />
+        <el-table-column prop="email" label="邮箱">
+          <template #default="{ row }">
+            <span v-if="row.email">{{ row.email }}</span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="电话" width="140">
+          <template #default="{ row }">
+            <span v-if="row.phone">{{ row.phone }}</span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
@@ -37,7 +47,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="180" />
+        <el-table-column prop="created_at" label="创建时间" width="180">
+          <template #default="{ row }">
+            <span v-if="row.created_at && row.created_at !== '0001-01-01T00:00:00Z'">
+              {{ formatTime(row.created_at) }}
+            </span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
@@ -124,6 +141,20 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   role: [{ required: true, message: '请选择角色', trigger: 'change' }]
+}
+
+const formatTime = (time) => {
+  if (!time) return '-'
+  const date = new Date(time)
+  if (isNaN(date.getTime()) || date.getFullYear() < 1970) return '-'
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 
 const fetchUsers = async () => {
@@ -216,7 +247,7 @@ const handleDelete = (row) => {
 
 const toggleStatus = async (row, status) => {
   try {
-    await updateUser(row.id, { ...row, status })
+    await updateUser(row.id, { status })
     ElMessage.success('操作成功')
     fetchUsers()
   } catch (e) {
@@ -244,5 +275,9 @@ onMounted(() => {
 .header-actions {
   display: flex;
   align-items: center;
+}
+
+.text-muted {
+  color: #909399;
 }
 </style>
