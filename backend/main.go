@@ -35,6 +35,7 @@ func main() {
 		&models.StockOperationLog{},
 		&models.SystemNotification{},
 		&models.AutoReplenishmentRecord{},
+		&models.MealAllowanceRecord{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)

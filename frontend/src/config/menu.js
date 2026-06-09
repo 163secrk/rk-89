@@ -18,7 +18,8 @@ import {
   Setting,
   Refresh,
   Bell,
-  Food
+  Food,
+  Wallet
 } from '@element-plus/icons-vue'
 
 export const menuConfig = [
@@ -148,6 +149,26 @@ export const menuConfig = [
         path: '/verification-records',
         title: '核销记录',
         icon: List
+      }
+    ]
+  },
+  {
+    path: '/meal-allowance',
+    title: '餐补管理',
+    icon: Wallet,
+    roles: ['admin'],
+    children: [
+      {
+        path: '/meal-allowance',
+        title: '余额管理',
+        icon: Wallet,
+        roles: ['admin']
+      },
+      {
+        path: '/meal-allowance-records',
+        title: '明细记录',
+        icon: Tickets,
+        roles: ['admin']
       }
     ]
   },

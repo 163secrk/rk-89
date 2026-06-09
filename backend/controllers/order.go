@@ -105,10 +105,28 @@ func CreateOrder(c *gin.Context) {
 
 	tx := config.DB.Begin()
 
+	balanceBefore := user.MealAllowance
 	user.MealAllowance -= totalPrice
+	balanceAfter := user.MealAllowance
 	if err := tx.Save(&user).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "扣除餐补失败"})
+		return
+	}
+
+	allowanceRecord := models.MealAllowanceRecord{
+		UserID:        orderData.UserID,
+		Type:          "consume",
+		Amount:        -totalPrice,
+		BalanceBefore: balanceBefore,
+		BalanceAfter:  balanceAfter,
+		RelatedType:   "order",
+		RelatedNo:     orderNo,
+		Remark:        "订单消费",
+	}
+	if err := tx.Create(&allowanceRecord).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "创建餐补消费记录失败"})
 		return
 	}
 
@@ -217,10 +235,29 @@ func UpdateOrderStatus(c *gin.Context) {
 			return
 		}
 
+		balanceBefore := user.MealAllowance
 		user.MealAllowance += order.TotalPrice
+		balanceAfter := user.MealAllowance
 		if err := tx.Save(&user).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "返还餐补失败"})
+			return
+		}
+
+		refundRecord := models.MealAllowanceRecord{
+			UserID:        order.UserID,
+			Type:          "refund",
+			Amount:        order.TotalPrice,
+			BalanceBefore: balanceBefore,
+			BalanceAfter:  balanceAfter,
+			RelatedType:   "order_cancel",
+			RelatedID:     order.ID,
+			RelatedNo:     order.OrderNo,
+			Remark:        "订单取消，返还餐补",
+		}
+		if err := tx.Create(&refundRecord).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "创建餐补返还记录失败"})
 			return
 		}
 

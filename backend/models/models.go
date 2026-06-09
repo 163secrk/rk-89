@@ -244,6 +244,23 @@ type AutoReplenishmentRecord struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
+type MealAllowanceRecord struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	UserID       uint      `gorm:"not null;index" json:"user_id"`
+	User         User      `json:"user,omitempty"`
+	Type         string    `gorm:"size:20;not null;index" json:"type"`
+	Amount       float64   `gorm:"not null" json:"amount"`
+	BalanceBefore float64  `gorm:"not null;default:0" json:"balance_before"`
+	BalanceAfter  float64  `gorm:"not null;default:0" json:"balance_after"`
+	RelatedType  string    `gorm:"size:50" json:"related_type"`
+	RelatedID    uint      `json:"related_id"`
+	RelatedNo    string    `gorm:"size:50" json:"related_no"`
+	OperatorID   uint      `json:"operator_id"`
+	OperatorName string    `gorm:"size:50" json:"operator_name"`
+	Remark       string    `gorm:"size:500" json:"remark"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 func SeedData(db *gorm.DB) {
 	var userCount int64
 	db.Model(&User{}).Count(&userCount)

@@ -137,5 +137,14 @@ func SetupRoutes(r *gin.Engine) {
 			inventory.PUT("/notifications/read-all", controllers.MarkAllNotificationsRead)
 			inventory.GET("/notifications/unread-count", controllers.GetUnreadNotificationCount)
 		}
+
+		mealAllowance := api.Group("/meal-allowance")
+		{
+			mealAllowance.POST("/recharge", controllers.RechargeMealAllowance)
+			mealAllowance.GET("/records", controllers.GetMealAllowanceRecords)
+			mealAllowance.GET("/records/user/:userId", controllers.GetUserMealAllowanceRecords)
+			mealAllowance.GET("/stats", controllers.GetMealAllowanceStats)
+			mealAllowance.GET("/consumptions", controllers.GetConsumptionRecords)
+		}
 	}
 }

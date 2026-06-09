@@ -120,6 +120,18 @@ const routes = [
         name: 'PurchaseDetail',
         component: () => import('@/views/PurchaseDetail.vue'),
         meta: { title: '补货单详情', icon: 'Document', roles: ['admin'] }
+      },
+      {
+        path: 'meal-allowance',
+        name: 'MealAllowanceManage',
+        component: () => import('@/views/MealAllowanceManage.vue'),
+        meta: { title: '餐补余额管理', icon: 'Wallet', roles: ['admin'] }
+      },
+      {
+        path: 'meal-allowance-records',
+        name: 'MealAllowanceRecords',
+        component: () => import('@/views/MealAllowanceRecords.vue'),
+        meta: { title: '餐补明细记录', icon: 'Tickets', roles: ['admin'] }
       }
     ]
   }
