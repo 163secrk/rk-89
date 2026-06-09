@@ -124,6 +124,13 @@ func SetupRoutes(r *gin.Engine) {
 			inventory.PUT("/alerts/:id", controllers.HandleStockAlert)
 			inventory.GET("/logs", controllers.GetOperationLogs)
 			inventory.PUT("/ingredients/:id/zone", controllers.UpdateIngredientZone)
+			inventory.POST("/analyze-zone-demand", controllers.AnalyzeZoneInventoryDemand)
+			inventory.POST("/auto-replenish", controllers.AutoReplenish)
+			inventory.GET("/auto-replenish-records", controllers.GetAutoReplenishmentRecords)
+			inventory.GET("/notifications", controllers.GetNotifications)
+			inventory.PUT("/notifications/:id/read", controllers.MarkNotificationRead)
+			inventory.PUT("/notifications/read-all", controllers.MarkAllNotificationsRead)
+			inventory.GET("/notifications/unread-count", controllers.GetUnreadNotificationCount)
 		}
 	}
 }

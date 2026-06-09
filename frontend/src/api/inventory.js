@@ -139,3 +139,64 @@ export function updateIngredient(id, data) {
     data
   })
 }
+
+export function analyzeZoneInventoryDemand(data) {
+  return request({
+    url: '/inventory/analyze-zone-demand',
+    method: 'post',
+    data
+  })
+}
+
+export function autoReplenish(data) {
+  return request({
+    url: '/inventory/auto-replenish',
+    method: 'post',
+    data
+  })
+}
+
+export function getAutoReplenishmentRecords(params) {
+  return request({
+    url: '/inventory/auto-replenish-records',
+    method: 'get',
+    params
+  })
+}
+
+export function getNotifications(params) {
+  return request({
+    url: '/inventory/notifications',
+    method: 'get',
+    params
+  })
+}
+
+export function markNotificationRead(id) {
+  return request({
+    url: `/inventory/notifications/${id}/read`,
+    method: 'put'
+  })
+}
+
+export function markAllNotificationsRead() {
+  return request({
+    url: '/inventory/notifications/read-all',
+    method: 'put'
+  })
+}
+
+export function getUnreadNotificationCount() {
+  return request({
+    url: '/inventory/notifications/unread-count',
+    method: 'get'
+  })
+}
+
+export function generatePurchaseList(data) {
+  return request({
+    url: '/purchases/generate',
+    method: 'post',
+    data
+  })
+}

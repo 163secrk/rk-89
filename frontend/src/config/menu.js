@@ -15,7 +15,9 @@ import {
   Goods,
   Tickets,
   Stamp,
-  Setting
+  Setting,
+  Refresh,
+  Bell
 } from '@element-plus/icons-vue'
 
 export const menuConfig = [
@@ -116,6 +118,12 @@ export const menuConfig = [
         title: '备菜出库',
         icon: Top,
         roles: ['admin']
+      },
+      {
+        path: '/auto-replenishment',
+        title: '自动补货',
+        icon: Refresh,
+        roles: ['admin']
       }
     ]
   },
@@ -147,6 +155,11 @@ export const menuConfig = [
         title: '用户管理',
         icon: User,
         roles: ['admin']
+      },
+      {
+        path: '/notifications',
+        title: '通知中心',
+        icon: Bell
       }
     ]
   }

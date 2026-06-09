@@ -212,6 +212,38 @@ type VerificationRecord struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type SystemNotification struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Type          string    `gorm:"size:50;not null" json:"type"`
+	Title         string    `gorm:"size:200;not null" json:"title"`
+	Content       string    `gorm:"type:text" json:"content"`
+	RelatedType   string    `gorm:"size:50" json:"related_type"`
+	RelatedID     uint      `json:"related_id"`
+	RelatedNo     string    `gorm:"size:50" json:"related_no"`
+	Status        string    `gorm:"size:20;default:'unread'" json:"status"`
+	Priority      string    `gorm:"size:20;default:'normal'" json:"priority"`
+	TargetRole    string    `gorm:"size:20;default:'admin'" json:"target_role"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	ReadAt        time.Time `json:"read_at"`
+}
+
+type AutoReplenishmentRecord struct {
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	BookingID      uint      `json:"booking_id"`
+	Booking        Booking   `json:"booking,omitempty"`
+	Date           string    `gorm:"size:20;not null" json:"date"`
+	MealType       string    `gorm:"size:20;not null" json:"meal_type"`
+	PeopleNum      int       `gorm:"not null" json:"people_num"`
+	PurchaseListID uint      `json:"purchase_list_id"`
+	PurchaseList   PurchaseList `json:"purchase_list,omitempty"`
+	Status         string    `gorm:"size:20;default:'completed'" json:"status"`
+	ShortageCount  int       `gorm:"default:0" json:"shortage_count"`
+	TotalShortage  float64   `gorm:"default:0" json:"total_shortage"`
+	Remark         string    `gorm:"size:500" json:"remark"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
 func SeedData(db *gorm.DB) {
 	var userCount int64
 	db.Model(&User{}).Count(&userCount)

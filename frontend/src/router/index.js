@@ -96,6 +96,24 @@ const routes = [
         name: 'StockOutbound',
         component: () => import('@/views/StockOutbound.vue'),
         meta: { title: '备菜出库', icon: 'Top', roles: ['admin'] }
+      },
+      {
+        path: 'auto-replenishment',
+        name: 'AutoReplenishment',
+        component: () => import('@/views/AutoReplenishment.vue'),
+        meta: { title: '自动补货', icon: 'Refresh', roles: ['admin'] }
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('@/views/Notifications.vue'),
+        meta: { title: '通知中心', icon: 'Bell' }
+      },
+      {
+        path: 'purchases/:id',
+        name: 'PurchaseDetail',
+        component: () => import('@/views/PurchaseDetail.vue'),
+        meta: { title: '补货单详情', icon: 'Document', roles: ['admin'] }
       }
     ]
   }

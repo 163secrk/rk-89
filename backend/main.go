@@ -2,9 +2,13 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"zhiwei-canteen/config"
 	"zhiwei-canteen/models"
 	"zhiwei-canteen/routes"
+	"zhiwei-canteen/scheduler"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -29,12 +33,16 @@ func main() {
 		&models.StockRecord{},
 		&models.StockAlert{},
 		&models.StockOperationLog{},
+		&models.SystemNotification{},
+		&models.AutoReplenishmentRecord{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	models.SeedData(config.DB)
+
+	scheduler.StartScheduler()
 
 	r := gin.Default()
 
@@ -48,6 +56,19 @@ func main() {
 
 	routes.SetupRoutes(r)
 
-	log.Println("Server starting on port 8089...")
-	log.Fatal(r.Run(":8089"))
+	go func() {
+		log.Println("Server starting on port 8089...")
+		if err := r.Run(":8089"); err != nil {
+			log.Fatal("Failed to start server:", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	scheduler.StopScheduler()
+
+	log.Println("Server exited")
 }
