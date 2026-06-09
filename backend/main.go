@@ -24,6 +24,8 @@ func main() {
 		&models.Booking{},
 		&models.PurchaseList{},
 		&models.PurchaseItem{},
+		&models.MealSession{},
+		&models.VerificationRecord{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)

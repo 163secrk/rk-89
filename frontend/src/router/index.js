@@ -48,6 +48,18 @@ const routes = [
         name: 'MealSelection',
         component: () => import('@/views/MealSelection.vue'),
         meta: { title: '智能配餐', icon: 'Shop' }
+      },
+      {
+        path: 'verification',
+        name: 'Verification',
+        component: () => import('@/views/Verification.vue'),
+        meta: { title: '窗口核销', icon: 'Camera' }
+      },
+      {
+        path: 'verification-records',
+        name: 'VerificationRecords',
+        component: () => import('@/views/VerificationRecords.vue'),
+        meta: { title: '核销记录', icon: 'List' }
       }
     ]
   }

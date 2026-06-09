@@ -131,6 +131,34 @@ type PurchaseItem struct {
 	Remark        string     `gorm:"size:500" json:"remark"`
 }
 
+type MealSession struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	MealType  string    `gorm:"size:20;unique;not null" json:"meal_type"`
+	Name      string    `gorm:"size:50;not null" json:"name"`
+	StartTime string    `gorm:"size:10;not null" json:"start_time"`
+	EndTime   string    `gorm:"size:10;not null" json:"end_time"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type VerificationRecord struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	OrderNo      string    `gorm:"size:50;not null;index" json:"order_no"`
+	OrderID      uint      `json:"order_id"`
+	Order        Order     `json:"order,omitempty"`
+	UserID       uint      `json:"user_id"`
+	User         User      `json:"user,omitempty"`
+	MealType     string    `gorm:"size:20;not null" json:"meal_type"`
+	MealDate     string    `gorm:"size:20;not null" json:"meal_date"`
+	VerifiedAt   time.Time `json:"verified_at"`
+	VerifiedBy   uint      `json:"verified_by"`
+	VerifierName string    `gorm:"size:50" json:"verifier_name"`
+	Status       string    `gorm:"size:20;default:'success'" json:"status"`
+	Remark       string    `gorm:"size:500" json:"remark"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 func SeedData(db *gorm.DB) {
 	var userCount int64
 	db.Model(&User{}).Count(&userCount)
@@ -217,5 +245,16 @@ func SeedData(db *gorm.DB) {
 			{DishID: 10, IngredientID: 15, Quantity: 0.2},
 		}
 		db.Create(&dishIngredients)
+	}
+
+	var mealSessionCount int64
+	db.Model(&MealSession{}).Count(&mealSessionCount)
+	if mealSessionCount == 0 {
+		mealSessions := []MealSession{
+			{MealType: "breakfast", Name: "早餐", StartTime: "06:30", EndTime: "09:00"},
+			{MealType: "lunch", Name: "午餐", StartTime: "11:30", EndTime: "13:30"},
+			{MealType: "dinner", Name: "晚餐", StartTime: "17:30", EndTime: "19:30"},
+		}
+		db.Create(&mealSessions)
 	}
 }

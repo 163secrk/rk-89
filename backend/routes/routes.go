@@ -100,5 +100,13 @@ func SetupRoutes(r *gin.Engine) {
 			purchases.PUT("/:id/status", controllers.UpdatePurchaseStatus)
 			purchases.PUT("/items/:id", controllers.UpdatePurchaseItem)
 		}
+
+		verification := api.Group("/verification")
+		{
+			verification.POST("", controllers.VerifyOrder)
+			verification.GET("/session", controllers.GetCurrentMealSession)
+			verification.GET("/sessions", controllers.GetMealSessions)
+			verification.GET("/records", controllers.GetVerificationRecords)
+		}
 	}
 }
