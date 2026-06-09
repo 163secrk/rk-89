@@ -17,7 +17,8 @@ import {
   Stamp,
   Setting,
   Refresh,
-  Bell
+  Bell,
+  Food
 } from '@element-plus/icons-vue'
 
 export const menuConfig = [
@@ -30,6 +31,12 @@ export const menuConfig = [
         path: '/dashboard',
         title: '仪表盘',
         icon: DataBoard
+      },
+      {
+        path: '/clean-plate',
+        title: '光盘行动统计',
+        icon: Food,
+        roles: ['admin']
       }
     ]
   },

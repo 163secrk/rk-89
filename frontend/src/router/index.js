@@ -110,6 +110,12 @@ const routes = [
         meta: { title: '通知中心', icon: 'Bell' }
       },
       {
+        path: 'clean-plate',
+        name: 'CleanPlateDashboard',
+        component: () => import('@/views/CleanPlateDashboard.vue'),
+        meta: { title: '光盘行动统计', icon: 'DataAnalysis', roles: ['admin'] }
+      },
+      {
         path: 'purchases/:id',
         name: 'PurchaseDetail',
         component: () => import('@/views/PurchaseDetail.vue'),

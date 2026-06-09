@@ -21,3 +21,42 @@ export function getDishStats() {
     method: 'get'
   })
 }
+
+export function getCleanPlateStats(params) {
+  return request({
+    url: '/stats/clean-plate',
+    method: 'get',
+    params
+  })
+}
+
+export function getCleanPlateDepartmentRanking(params) {
+  return request({
+    url: '/stats/clean-plate/department-ranking',
+    method: 'get',
+    params
+  })
+}
+
+export function getCleanPlateUserRanking(params) {
+  return request({
+    url: '/stats/clean-plate/user-ranking',
+    method: 'get',
+    params
+  })
+}
+
+export function getCleanPlateTrend(params) {
+  return request({
+    url: '/stats/clean-plate/trend',
+    method: 'get',
+    params
+  })
+}
+
+export function getDepartments() {
+  return request({
+    url: '/stats/departments',
+    method: 'get'
+  })
+}

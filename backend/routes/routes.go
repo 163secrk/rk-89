@@ -58,6 +58,11 @@ func SetupRoutes(r *gin.Engine) {
 		}
 
 		api.GET("/stats/dashboard", controllers.GetDashboardStats)
+		api.GET("/stats/clean-plate", controllers.GetCleanPlateStats)
+		api.GET("/stats/clean-plate/department-ranking", controllers.GetCleanPlateDepartmentRanking)
+		api.GET("/stats/clean-plate/user-ranking", controllers.GetCleanPlateUserRanking)
+		api.GET("/stats/clean-plate/trend", controllers.GetCleanPlateTrend)
+		api.GET("/stats/departments", controllers.GetDepartments)
 
 		ingredients := api.Group("/ingredients")
 		{
