@@ -60,6 +60,42 @@ const routes = [
         name: 'VerificationRecords',
         component: () => import('@/views/VerificationRecords.vue'),
         meta: { title: '核销记录', icon: 'List' }
+      },
+      {
+        path: 'inventory-dashboard',
+        name: 'InventoryDashboard',
+        component: () => import('@/views/InventoryDashboard.vue'),
+        meta: { title: '库存看板', icon: 'DataAnalysis', roles: ['admin'] }
+      },
+      {
+        path: 'inventory-manage',
+        name: 'InventoryManage',
+        component: () => import('@/views/InventoryManage.vue'),
+        meta: { title: '库存管理', icon: 'Grid', roles: ['admin'] }
+      },
+      {
+        path: 'inventory-alerts',
+        name: 'InventoryAlerts',
+        component: () => import('@/views/InventoryAlerts.vue'),
+        meta: { title: '库存预警', icon: 'Warning', roles: ['admin'] }
+      },
+      {
+        path: 'inventory-logs',
+        name: 'InventoryLogs',
+        component: () => import('@/views/InventoryLogs.vue'),
+        meta: { title: '操作日志', icon: 'Document', roles: ['admin'] }
+      },
+      {
+        path: 'stock-inbound',
+        name: 'StockInbound',
+        component: () => import('@/views/StockInbound.vue'),
+        meta: { title: '采购入库', icon: 'Bottom', roles: ['admin'] }
+      },
+      {
+        path: 'stock-outbound',
+        name: 'StockOutbound',
+        component: () => import('@/views/StockOutbound.vue'),
+        meta: { title: '备菜出库', icon: 'Top', roles: ['admin'] }
       }
     ]
   }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -254,6 +255,21 @@ func UpdatePurchaseStatus(c *gin.Context) {
 				config.DB.Model(&models.Ingredient{}).Where("id = ?", item.IngredientID).Update("stock", config.DB.Raw("stock + ?", item.PurchaseQty))
 			}
 		}
+	}
+
+	if req.Status == "approved" {
+		logContent := map[string]interface{}{
+			"purchase_list_id": id,
+			"purchase_no":      purchaseList.PurchaseNo,
+		}
+		logJSON, _ := json.Marshal(logContent)
+		opLog := models.StockOperationLog{
+			Operation:    "approve_purchase",
+			Module:       "inventory",
+			Content:      string(logJSON),
+			OperatorName: "系统",
+		}
+		config.DB.Create(&opLog)
 	}
 
 	purchaseList.Status = req.Status

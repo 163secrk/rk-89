@@ -68,16 +68,65 @@ type MealPlan struct {
 }
 
 type Ingredient struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Name      string    `gorm:"size:100;not null" json:"name"`
-	Category  string    `gorm:"size:50;not null" json:"category"`
-	Unit      string    `gorm:"size:20;not null" json:"unit"`
-	Price     float64   `gorm:"default:0" json:"price"`
-	Stock     float64   `gorm:"default:0" json:"stock"`
-	Supplier  string    `gorm:"size:100" json:"supplier"`
-	Remark    string    `gorm:"size:500" json:"remark"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Name          string    `gorm:"size:100;not null" json:"name"`
+	Category      string    `gorm:"size:50;not null" json:"category"`
+	Unit          string    `gorm:"size:20;not null" json:"unit"`
+	Price         float64   `gorm:"default:0" json:"price"`
+	Stock         float64   `gorm:"default:0" json:"stock"`
+	Supplier      string    `gorm:"size:100" json:"supplier"`
+	WarehouseZone string    `gorm:"size:20;default:'dry'" json:"warehouse_zone"`
+	SafetyStock   float64   `gorm:"default:0" json:"safety_stock"`
+	Remark        string    `gorm:"size:500" json:"remark"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type StockRecord struct {
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	IngredientID   uint      `json:"ingredient_id"`
+	Ingredient     Ingredient `json:"ingredient,omitempty"`
+	WarehouseZone  string    `gorm:"size:20;not null" json:"warehouse_zone"`
+	ChangeType     string    `gorm:"size:20;not null" json:"change_type"`
+	ChangeQty      float64   `gorm:"not null" json:"change_qty"`
+	StockBefore    float64   `gorm:"default:0" json:"stock_before"`
+	StockAfter     float64   `gorm:"default:0" json:"stock_after"`
+	RelatedType    string    `gorm:"size:50" json:"related_type"`
+	RelatedID      uint      `json:"related_id"`
+	RelatedNo      string    `gorm:"size:50" json:"related_no"`
+	OperatorID     uint      `json:"operator_id"`
+	OperatorName   string    `gorm:"size:50" json:"operator_name"`
+	Remark         string    `gorm:"size:500" json:"remark"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type StockAlert struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	IngredientID  uint      `json:"ingredient_id"`
+	Ingredient    Ingredient `json:"ingredient,omitempty"`
+	AlertType     string    `gorm:"size:20;not null" json:"alert_type"`
+	AlertLevel    string    `gorm:"size:20;not null" json:"alert_level"`
+	CurrentStock  float64   `gorm:"default:0" json:"current_stock"`
+	SafetyStock   float64   `gorm:"default:0" json:"safety_stock"`
+	ShortageQty   float64   `gorm:"default:0" json:"shortage_qty"`
+	Status        string    `gorm:"size:20;default:'pending'" json:"status"`
+	HandledBy     uint      `json:"handled_by"`
+	HandledByName string    `gorm:"size:50" json:"handled_by_name"`
+	HandledAt     time.Time `json:"handled_at"`
+	HandleRemark  string    `gorm:"size:500" json:"handle_remark"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type StockOperationLog struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Operation    string    `gorm:"size:50;not null" json:"operation"`
+	Module       string    `gorm:"size:50;not null" json:"module"`
+	Content      string    `gorm:"type:text" json:"content"`
+	OperatorID   uint      `json:"operator_id"`
+	OperatorName string    `gorm:"size:50" json:"operator_name"`
+	IPAddress    string    `gorm:"size:50" json:"ip_address"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type DishIngredient struct {
@@ -194,24 +243,24 @@ func SeedData(db *gorm.DB) {
 	db.Model(&Ingredient{}).Count(&ingredientCount)
 	if ingredientCount == 0 {
 		ingredients := []Ingredient{
-			{Name: "五花肉", Category: "肉类", Unit: "kg", Price: 35.00, Stock: 50.0, Supplier: "鲜肉批发"},
-			{Name: "鲈鱼", Category: "水产", Unit: "kg", Price: 45.00, Stock: 20.0, Supplier: "水产商行"},
-			{Name: "鸡胸肉", Category: "肉类", Unit: "kg", Price: 22.00, Stock: 40.0, Supplier: "鲜肉批发"},
-			{Name: "花生米", Category: "干货", Unit: "kg", Price: 18.00, Stock: 30.0, Supplier: "干货批发"},
-			{Name: "干辣椒", Category: "调料", Unit: "kg", Price: 30.00, Stock: 10.0, Supplier: "调料商行"},
-			{Name: "西兰花", Category: "蔬菜", Unit: "kg", Price: 12.00, Stock: 25.0, Supplier: "蔬菜配送"},
-			{Name: "大蒜", Category: "调料", Unit: "kg", Price: 8.00, Stock: 15.0, Supplier: "蔬菜配送"},
-			{Name: "西红柿", Category: "蔬菜", Unit: "kg", Price: 6.00, Stock: 30.0, Supplier: "蔬菜配送"},
-			{Name: "鸡蛋", Category: "禽蛋", Unit: "kg", Price: 10.00, Stock: 40.0, Supplier: "禽蛋批发"},
-			{Name: "豆腐", Category: "豆制品", Unit: "kg", Price: 5.00, Stock: 50.0, Supplier: "豆制品厂"},
-			{Name: "豆瓣酱", Category: "调料", Unit: "kg", Price: 15.00, Stock: 20.0, Supplier: "调料商行"},
-			{Name: "大米", Category: "主食", Unit: "kg", Price: 5.00, Stock: 200.0, Supplier: "粮油批发"},
-			{Name: "杂粮米", Category: "主食", Unit: "kg", Price: 8.00, Stock: 100.0, Supplier: "粮油批发"},
-			{Name: "紫菜", Category: "干货", Unit: "kg", Price: 40.00, Stock: 5.0, Supplier: "干货批发"},
-			{Name: "苹果", Category: "水果", Unit: "kg", Price: 10.00, Stock: 50.0, Supplier: "水果批发"},
-			{Name: "生抽", Category: "调料", Unit: "瓶", Price: 12.00, Stock: 30.0, Supplier: "调料商行"},
-			{Name: "食用油", Category: "调料", Unit: "L", Price: 15.00, Stock: 50.0, Supplier: "粮油批发"},
-			{Name: "盐", Category: "调料", Unit: "kg", Price: 3.00, Stock: 20.0, Supplier: "调料商行"},
+			{Name: "五花肉", Category: "肉类", Unit: "kg", Price: 35.00, Stock: 50.0, Supplier: "鲜肉批发", WarehouseZone: "frozen", SafetyStock: 20},
+			{Name: "鲈鱼", Category: "水产", Unit: "kg", Price: 45.00, Stock: 20.0, Supplier: "水产商行", WarehouseZone: "refrigerated", SafetyStock: 10},
+			{Name: "鸡胸肉", Category: "肉类", Unit: "kg", Price: 22.00, Stock: 40.0, Supplier: "鲜肉批发", WarehouseZone: "frozen", SafetyStock: 15},
+			{Name: "花生米", Category: "干货", Unit: "kg", Price: 18.00, Stock: 30.0, Supplier: "干货批发", WarehouseZone: "dry", SafetyStock: 10},
+			{Name: "干辣椒", Category: "调料", Unit: "kg", Price: 30.00, Stock: 10.0, Supplier: "调料商行", WarehouseZone: "dry", SafetyStock: 5},
+			{Name: "西兰花", Category: "蔬菜", Unit: "kg", Price: 12.00, Stock: 25.0, Supplier: "蔬菜配送", WarehouseZone: "refrigerated", SafetyStock: 15},
+			{Name: "大蒜", Category: "调料", Unit: "kg", Price: 8.00, Stock: 15.0, Supplier: "蔬菜配送", WarehouseZone: "dry", SafetyStock: 8},
+			{Name: "西红柿", Category: "蔬菜", Unit: "kg", Price: 6.00, Stock: 30.0, Supplier: "蔬菜配送", WarehouseZone: "refrigerated", SafetyStock: 15},
+			{Name: "鸡蛋", Category: "禽蛋", Unit: "kg", Price: 10.00, Stock: 40.0, Supplier: "禽蛋批发", WarehouseZone: "refrigerated", SafetyStock: 20},
+			{Name: "豆腐", Category: "豆制品", Unit: "kg", Price: 5.00, Stock: 50.0, Supplier: "豆制品厂", WarehouseZone: "refrigerated", SafetyStock: 20},
+			{Name: "豆瓣酱", Category: "调料", Unit: "kg", Price: 15.00, Stock: 20.0, Supplier: "调料商行", WarehouseZone: "dry", SafetyStock: 8},
+			{Name: "大米", Category: "主食", Unit: "kg", Price: 5.00, Stock: 200.0, Supplier: "粮油批发", WarehouseZone: "dry", SafetyStock: 100},
+			{Name: "杂粮米", Category: "主食", Unit: "kg", Price: 8.00, Stock: 100.0, Supplier: "粮油批发", WarehouseZone: "dry", SafetyStock: 50},
+			{Name: "紫菜", Category: "干货", Unit: "kg", Price: 40.00, Stock: 5.0, Supplier: "干货批发", WarehouseZone: "dry", SafetyStock: 3},
+			{Name: "苹果", Category: "水果", Unit: "kg", Price: 10.00, Stock: 50.0, Supplier: "水果批发", WarehouseZone: "refrigerated", SafetyStock: 20},
+			{Name: "生抽", Category: "调料", Unit: "瓶", Price: 12.00, Stock: 30.0, Supplier: "调料商行", WarehouseZone: "dry", SafetyStock: 15},
+			{Name: "食用油", Category: "调料", Unit: "L", Price: 15.00, Stock: 50.0, Supplier: "粮油批发", WarehouseZone: "dry", SafetyStock: 20},
+			{Name: "盐", Category: "调料", Unit: "kg", Price: 3.00, Stock: 20.0, Supplier: "调料商行", WarehouseZone: "dry", SafetyStock: 10},
 		}
 		db.Create(&ingredients)
 	}

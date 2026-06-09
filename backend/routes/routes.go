@@ -110,5 +110,20 @@ func SetupRoutes(r *gin.Engine) {
 			verification.GET("/sessions", controllers.GetMealSessions)
 			verification.GET("/records", controllers.GetVerificationRecords)
 		}
+
+		inventory := api.Group("/inventory")
+		{
+			inventory.GET("/dashboard", controllers.GetInventoryDashboard)
+			inventory.GET("/stock", controllers.GetInventoryByZone)
+			inventory.GET("/zones", controllers.GetWarehouseZones)
+			inventory.POST("/inbound", controllers.StockInbound)
+			inventory.POST("/outbound", controllers.StockOutbound)
+			inventory.POST("/calculate-demand", controllers.CalculateMealPlanDemand)
+			inventory.GET("/records", controllers.GetStockRecords)
+			inventory.GET("/alerts", controllers.GetStockAlerts)
+			inventory.PUT("/alerts/:id", controllers.HandleStockAlert)
+			inventory.GET("/logs", controllers.GetOperationLogs)
+			inventory.PUT("/ingredients/:id/zone", controllers.UpdateIngredientZone)
+		}
 	}
 }
