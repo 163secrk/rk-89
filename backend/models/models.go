@@ -7,14 +7,15 @@ import (
 )
 
 type User struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Username  string    `gorm:"unique;size:50;not null" json:"username"`
-	Password  string    `gorm:"size:100;not null" json:"password,omitempty"`
-	Name      string    `gorm:"size:50;not null" json:"name"`
-	Role      string    `gorm:"size:20;not null;default:'user'" json:"role"`
-	Department string   `gorm:"size:100" json:"department"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Username      string    `gorm:"unique;size:50;not null" json:"username"`
+	Password      string    `gorm:"size:100;not null" json:"password,omitempty"`
+	Name          string    `gorm:"size:50;not null" json:"name"`
+	Role          string    `gorm:"size:20;not null;default:'user'" json:"role"`
+	Department    string    `gorm:"size:100" json:"department"`
+	MealAllowance float64   `gorm:"default:0" json:"meal_allowance"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type Dish struct {
@@ -164,9 +165,9 @@ func SeedData(db *gorm.DB) {
 	db.Model(&User{}).Count(&userCount)
 	if userCount == 0 {
 		users := []User{
-			{Username: "admin", Password: "123456", Name: "管理员", Role: "admin", Department: "信息部"},
-			{Username: "user1", Password: "123456", Name: "张三", Role: "user", Department: "研发部"},
-			{Username: "user2", Password: "123456", Name: "李四", Role: "user", Department: "市场部"},
+			{Username: "admin", Password: "123456", Name: "管理员", Role: "admin", Department: "信息部", MealAllowance: 500.00},
+			{Username: "user1", Password: "123456", Name: "张三", Role: "user", Department: "研发部", MealAllowance: 500.00},
+			{Username: "user2", Password: "123456", Name: "李四", Role: "user", Department: "市场部", MealAllowance: 500.00},
 		}
 		db.Create(&users)
 	}

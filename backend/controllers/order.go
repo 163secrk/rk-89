@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"zhiwei-canteen/config"
 	"zhiwei-canteen/models"
@@ -61,6 +62,12 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	var user models.User
+	if err := config.DB.First(&user, orderData.UserID).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "用户不存在"})
+		return
+	}
+
 	orderNo := fmt.Sprintf("ORD%s%06d", time.Now().Format("20060102150405"), orderData.UserID)
 
 	totalPrice := 0.0
@@ -91,6 +98,20 @@ func CreateOrder(c *gin.Context) {
 		config.DB.Save(&dish)
 	}
 
+	if user.MealAllowance < totalPrice {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": fmt.Sprintf("餐补余额不足，当前余额：¥%.2f，订单金额：¥%.2f", user.MealAllowance, totalPrice)})
+		return
+	}
+
+	tx := config.DB.Begin()
+
+	user.MealAllowance -= totalPrice
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "扣除餐补失败"})
+		return
+	}
+
 	order := models.Order{
 		OrderNo:    orderNo,
 		UserID:     orderData.UserID,
@@ -102,16 +123,19 @@ func CreateOrder(c *gin.Context) {
 		Items:      orderItems,
 	}
 
-	if err := config.DB.Create(&order).Error; err != nil {
+	if err := tx.Create(&order).Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "创建订单失败: " + err.Error()})
 		return
 	}
+
+	tx.Commit()
 
 	config.DB.Preload("Items.Dish").First(&order, order.ID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "订单创建成功",
+		"message": fmt.Sprintf("订单创建成功，已扣除餐补 ¥%.2f，剩余餐补 ¥%.2f", totalPrice, user.MealAllowance),
 		"data":    order,
 	})
 }
@@ -173,8 +197,62 @@ func UpdateOrderStatus(c *gin.Context) {
 	}
 
 	var order models.Order
-	if err := config.DB.First(&order, id).Error; err != nil {
+	if err := config.DB.Preload("Items").First(&order, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"success": false, "message": "订单不存在"})
+		return
+	}
+
+	if statusData.Status == "cancelled" && (order.Status == "pending" || order.Status == "confirmed") {
+		if err := canCancelOrder(&order); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+			return
+		}
+
+		tx := config.DB.Begin()
+
+		var user models.User
+		if err := tx.First(&user, order.UserID).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "用户不存在"})
+			return
+		}
+
+		user.MealAllowance += order.TotalPrice
+		if err := tx.Save(&user).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "返还餐补失败"})
+			return
+		}
+
+		for _, item := range order.Items {
+			var dish models.Dish
+			if err := tx.First(&dish, item.DishID).Error; err != nil {
+				continue
+			}
+			dish.Stock += item.Quantity
+			if err := tx.Save(&dish).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "恢复菜品库存失败"})
+				return
+			}
+		}
+
+		order.Status = "cancelled"
+		if err := tx.Save(&order).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "更新订单状态失败"})
+			return
+		}
+
+		tx.Commit()
+
+		config.DB.Preload("Items.Dish").Preload("User").First(&order, order.ID)
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": fmt.Sprintf("订单已取消，已返还餐补 ¥%.2f，当前餐补余额 ¥%.2f", order.TotalPrice, user.MealAllowance),
+			"data":    order,
+		})
 		return
 	}
 
@@ -189,6 +267,37 @@ func UpdateOrderStatus(c *gin.Context) {
 		"message": "状态更新成功",
 		"data":    order,
 	})
+}
+
+func canCancelOrder(order *models.Order) error {
+	var mealSession models.MealSession
+	if err := config.DB.Where("meal_type = ?", order.MealTime).First(&mealSession).Error; err != nil {
+		return fmt.Errorf("未找到用餐时段配置")
+	}
+
+	mealDate, err := time.ParseInLocation("2006-01-02", order.MealDate, time.Local)
+	if err != nil {
+		return fmt.Errorf("用餐日期格式错误")
+	}
+
+	startTimeParts := strings.Split(mealSession.StartTime, ":")
+	if len(startTimeParts) != 2 {
+		return fmt.Errorf("用餐开始时间格式错误")
+	}
+	hour, _ := strconv.Atoi(startTimeParts[0])
+	minute, _ := strconv.Atoi(startTimeParts[1])
+
+	mealStartTime := time.Date(mealDate.Year(), mealDate.Month(), mealDate.Day(), hour, minute, 0, 0, time.Local)
+	now := time.Now()
+	cancelDeadline := mealStartTime.Add(-2 * time.Hour)
+
+	if now.After(cancelDeadline) {
+		return fmt.Errorf("已超过取消时限，需在开餐前2小时前取消。开餐时间：%s，当前时间：%s",
+			mealStartTime.Format("2006-01-02 15:04:05"),
+			now.Format("2006-01-02 15:04:05"))
+	}
+
+	return nil
 }
 
 func GetUserOrders(c *gin.Context) {
@@ -207,5 +316,120 @@ func GetUserOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    orders,
+	})
+}
+
+func CancelOrder(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var order models.Order
+	if err := config.DB.Preload("Items").First(&order, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "message": "订单不存在"})
+		return
+	}
+
+	if order.Status != "pending" && order.Status != "confirmed" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "当前订单状态不允许取消"})
+		return
+	}
+
+	if err := canCancelOrder(&order); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	tx := config.DB.Begin()
+
+	var user models.User
+	if err := tx.First(&user, order.UserID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "用户不存在"})
+		return
+	}
+
+	user.MealAllowance += order.TotalPrice
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "返还餐补失败"})
+		return
+	}
+
+	for _, item := range order.Items {
+		var dish models.Dish
+		if err := tx.First(&dish, item.DishID).Error; err != nil {
+			continue
+		}
+		dish.Stock += item.Quantity
+		if err := tx.Save(&dish).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "恢复菜品库存失败"})
+			return
+		}
+	}
+
+	order.Status = "cancelled"
+	if err := tx.Save(&order).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "更新订单状态失败"})
+		return
+	}
+
+	tx.Commit()
+
+	config.DB.Preload("Items.Dish").Preload("User").First(&order, order.ID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": fmt.Sprintf("订单已取消，已返还餐补 ¥%.2f，当前餐补余额 ¥%.2f", order.TotalPrice, user.MealAllowance),
+		"data":    order,
+	})
+}
+
+func GetOrderCancelInfo(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var order models.Order
+	if err := config.DB.First(&order, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "message": "订单不存在"})
+		return
+	}
+
+	var mealSession models.MealSession
+	config.DB.Where("meal_type = ?", order.MealTime).First(&mealSession)
+
+	canCancel := true
+	var cancelReason string
+	var cancelDeadline time.Time
+	var remainingTime int64
+
+	if order.Status != "pending" && order.Status != "confirmed" {
+		canCancel = false
+		cancelReason = "当前订单状态不允许取消"
+	} else if err := canCancelOrder(&order); err != nil {
+		canCancel = false
+		cancelReason = err.Error()
+	}
+
+	if mealSession.StartTime != "" {
+		mealDate, _ := time.ParseInLocation("2006-01-02", order.MealDate, time.Local)
+		startTimeParts := strings.Split(mealSession.StartTime, ":")
+		if len(startTimeParts) == 2 {
+			hour, _ := strconv.Atoi(startTimeParts[0])
+			minute, _ := strconv.Atoi(startTimeParts[1])
+			mealStartTime := time.Date(mealDate.Year(), mealDate.Month(), mealDate.Day(), hour, minute, 0, 0, time.Local)
+			cancelDeadline = mealStartTime.Add(-2 * time.Hour)
+			remainingTime = int64(cancelDeadline.Sub(time.Now()).Seconds())
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"can_cancel":      canCancel,
+			"cancel_reason":   cancelReason,
+			"cancel_deadline": cancelDeadline.Format("2006-01-02 15:04:05"),
+			"remaining_time":  remainingTime,
+			"refund_amount":   order.TotalPrice,
+		},
 	})
 }

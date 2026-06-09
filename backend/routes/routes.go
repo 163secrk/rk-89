@@ -43,6 +43,8 @@ func SetupRoutes(r *gin.Engine) {
 			orders.DELETE("/:id", controllers.DeleteOrder)
 			orders.PUT("/:id/status", controllers.UpdateOrderStatus)
 			orders.GET("/user/:userId", controllers.GetUserOrders)
+			orders.POST("/:id/cancel", controllers.CancelOrder)
+			orders.GET("/:id/cancel-info", controllers.GetOrderCancelInfo)
 		}
 
 		mealPlans := api.Group("/meal-plans")

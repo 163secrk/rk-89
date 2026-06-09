@@ -66,7 +66,17 @@
       </el-col>
 
       <el-col :span="6">
-        <el-card shadow="hover" class="cart-card">
+        <el-card shadow="hover" class="allowance-card">
+          <div class="allowance-info">
+            <div class="allowance-icon"><el-icon><Wallet /></el-icon></div>
+            <div class="allowance-detail">
+              <div class="allowance-label">餐补余额</div>
+              <div class="allowance-amount">¥{{ (currentUser?.meal_allowance || 0).toFixed(2) }}</div>
+            </div>
+          </div>
+        </el-card>
+
+        <el-card shadow="hover" class="cart-card" style="margin-top: 20px;">
           <template #header>
             <div class="cart-header">
               <span class="title"><el-icon><ShoppingCart /></el-icon> 我的订单</span>
@@ -145,10 +155,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Refresh, Plus, Minus, ShoppingCart, Delete, Check } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Minus, ShoppingCart, Delete, Check, Wallet } from '@element-plus/icons-vue'
 import { getDishes } from '@/api/dish'
 import { getTodayMealPlan } from '@/api/mealplan'
 import { createOrder } from '@/api/order'
+import { getUser, setUser } from '@/utils/auth'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -158,6 +169,7 @@ const dishes = ref([])
 const cart = ref([])
 const remark = ref('')
 const todayMealPlan = ref([])
+const currentUser = ref(getUser())
 
 const filteredDishes = computed(() => {
   let result = dishes.value
@@ -244,6 +256,11 @@ const clearCart = () => {
 }
 
 const submitOrder = async () => {
+  if (cartTotalPrice.value > (currentUser.value?.meal_allowance || 0)) {
+    ElMessage.warning(`餐补余额不足，当前余额：¥${(currentUser.value?.meal_allowance || 0).toFixed(2)}，订单金额：¥${cartTotalPrice.value.toFixed(2)}`)
+    return
+  }
+
   submitting.value = true
   try {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -258,8 +275,12 @@ const submitOrder = async () => {
       })),
       remark: remark.value
     }
-    await createOrder(orderData)
-    ElMessage.success('订单提交成功！')
+    const res = await createOrder(orderData)
+    
+    currentUser.value.meal_allowance = (currentUser.value.meal_allowance || 0) - cartTotalPrice.value
+    setUser(currentUser.value)
+    
+    ElMessage.success(res.message || '订单提交成功！')
     clearCart()
   } catch (e) {
     console.log('Submit order error')
@@ -283,6 +304,44 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.allowance-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.allowance-card :deep(.el-card__body) {
+  padding: 20px;
+}
+
+.allowance-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.allowance-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.allowance-label {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+
+.allowance-amount {
+  font-size: 28px;
+  font-weight: 600;
 }
 
 .title {

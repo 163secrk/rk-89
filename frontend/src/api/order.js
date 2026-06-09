@@ -55,3 +55,17 @@ export function getMyOrders(params) {
     params
   })
 }
+
+export function cancelOrder(id) {
+  return request({
+    url: '/orders/' + id + '/cancel',
+    method: 'post'
+  })
+}
+
+export function getOrderCancelInfo(id) {
+  return request({
+    url: '/orders/' + id + '/cancel-info',
+    method: 'get'
+  })
+}
